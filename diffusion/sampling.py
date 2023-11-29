@@ -74,11 +74,20 @@ def reverse_sample(args, score_func, sde, sched, pdb=None, Y=None, device='cpu',
             new_eigens = torch.zeros(sde.N, dtype=bool, device=device)
             new_eigens[k-dk+1:k+1] = True
             Y = Y + sde.inject(t, new_eigens)
-            
         
+        #Anthony Code Fix
+        Y = torch.as_tensor(Y, dtype=torch.float, device=device)
+        P_tensor = torch.as_tensor(sde.P, dtype=torch.float, device=device)
+        D_tensor = torch.as_tensor(sde.D, dtype=torch.float, device=device)
+
         score = score_func(Y, t, k)
         
-        dY = - (1 + sched.alpha*sched.beta) * (sde.P*sde.D)@(sde.P.T@Y) * dt / 2
+        dY = - (1 + sched.alpha*sched.beta) * (P_tensor*D_tensor)@(P_tensor.T@Y) * dt / 2
+        print(type(dY))
+        print(type(score))
+        print(type(dt))
+        print(type(sched.alpha))
+        print(type(sched.beta))
         dY = dY + (1 + sched.alpha*sched.beta/2) * score * dt 
         
         if logF is not None:
