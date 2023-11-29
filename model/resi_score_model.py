@@ -205,6 +205,10 @@ class ResiLevelTensorProductScoreModel(torch.nn.Module):
         if edge_pos_emb:
             edge_pos_emb = sinusoidal_embedding(dst - src, self.args.resi_pos_emb_dim)
             edge_attr = torch.cat([edge_pos_emb, edge_attr], 1)
+        
+        # print(data[key]) 
+        # print(type(data[key]))
+        
         edge_vec = data[key].pos[src.long()] - data[key].pos[dst.long()]
         if self.args.no_radius_sqrt:
             edge_length_emb = self.distance_expansion(edge_vec.norm(dim=-1))

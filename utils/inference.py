@@ -27,6 +27,7 @@ def inference_epoch(args, model, dataset, device='cpu', rank=0, world_size=1, pd
             try:
                 pdb = PDBFile(molseq) if pdbs else None
                 data = copy.deepcopy(data_)
+               #print(data['resi'])
                 data.Y = reverse_sample(args, score_fn, sde, sched, device=device, Y=None,
                             pdb=pdb, tqdm_=not args.wandb, ode=args.ode)
                 
@@ -64,10 +65,18 @@ def get_score_fn(args, model, data, key='resi', device='cpu'):
     data = copy.deepcopy(data); data.to(device); sde = data.sde
     @torch.no_grad()
     def score_fn(Y, t, k):
-        data[key].pos = Y[:data['resi'].num_nodes]
+
+        # print(type(data[key].pos))
+        # print(type(Y))
+        
+        data[key].pos = torch.tensor(Y[:data['resi'].num_nodes]).to(device=device)
         data[key].node_t = torch.ones(data.resi_sde.N, device=device) * t
         data.score_norm = sde.score_norm(t, k, adj=True)
-        data['sidechain'].pos = Y[data['resi'].num_nodes:]
+        data['sidechain'].pos = torch.tensor(Y[data['resi'].num_nodes:]).to(device=device)
+
+        # print(type(data[key].pos))
+        # print(type(Y))
+
         return model.enn(data)
     return score_fn
 
